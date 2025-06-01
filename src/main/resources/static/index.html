@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI聊天机器人测试</title>
+</head>
+<body>
+<h1>🤖 AI聊天机器人</h1>
+<p>如果你能看到这个页面，说明静态文件配置成功了！</p>
+
+<div id="messages" style="border:1px solid #ccc; height:300px; padding:10px; overflow-y:auto;">
+    <p><strong>系统:</strong> 欢迎使用AI聊天机器人！</p>
+</div>
+
+<br>
+<input type="text" id="messageInput" placeholder="输入消息..." style="width:70%;">
+<button onclick="sendMessage()" style="width:25%;">发送</button>
+
+<script>
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const messages = document.getElementById('messages');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        messages.innerHTML += '<p><strong>你:</strong> ' + message + '</p>';
+        messages.innerHTML += '<p><strong>AI:</strong> 正在连接后端...</p>';
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: message})
+        })
+            .then(response => response.json())
+            .then(data => {
+                const lastP = messages.lastElementChild;
+                if (data.success) {
+                    lastP.innerHTML = '<strong>AI:</strong> ' + data.response;
+                } else {
+                    lastP.innerHTML = '<strong>AI:</strong> 错误: ' + data.error;
+                }
+            })
+            .catch(error => {
+                const lastP = messages.lastElementChild;
+                lastP.innerHTML = '<strong>AI:</strong> 连接失败: ' + error;
+            });
+    }
+</script>
+</body>
+</html>

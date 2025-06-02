@@ -30,6 +30,9 @@ public class ChatService {
     @Autowired
     private OllamaService ollamaService;
 
+    /**
+     * 处理聊天请求
+     */
     @Transactional
     public ChatResponse processChat(ChatRequest request) {
         try {
@@ -42,8 +45,9 @@ public class ChatService {
                 return new ChatResponse("用户名不能为空");
             }
 
-            // 1. 获取或创建用户
-            User user = getOrCreateUser(request.getUsername());
+            // 1. 获取用户（必须已存在，因为已通过认证）
+            User user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new RuntimeException("用户不存在: " + request.getUsername()));
 
             // 2. 获取或创建会话
             ChatSession session = getOrCreateSession(user, request.getSessionId());
@@ -81,20 +85,19 @@ public class ChatService {
         }
     }
 
-    private User getOrCreateUser(String username) {
-        return userRepository.findByUsername(username)
-                .orElseGet(() -> {
-                    User newUser = new User(username, username + "@example.com");
-                    return userRepository.save(newUser);
-                });
-    }
-
+    /**
+     * 获取或创建会话
+     */
     private ChatSession getOrCreateSession(User user, Long sessionId) {
         if (sessionId != null) {
             Optional<ChatSession> sessionOpt = chatSessionRepository.findById(sessionId);
-            if (sessionOpt.isPresent() &&
-                    sessionOpt.get().getUser().getId().equals(user.getId())) {
-                return sessionOpt.get();
+            if (sessionOpt.isPresent()) {
+                ChatSession session = sessionOpt.get();
+                // 验证会话是否属于当前用户
+                if (!session.getUser().getId().equals(user.getId())) {
+                    throw new RuntimeException("无权限访问此会话");
+                }
+                return session;
             }
         }
 
@@ -103,6 +106,9 @@ public class ChatService {
         return chatSessionRepository.save(newSession);
     }
 
+    /**
+     * 构建上下文提示
+     */
     private String buildContextualPrompt(Long sessionId, String currentMessage) {
         try {
             // 获取最近5条消息作为上下文
@@ -126,6 +132,9 @@ public class ChatService {
         }
     }
 
+    /**
+     * 更新会话标题
+     */
     private void updateSessionTitle(ChatSession session, String firstMessage) {
         if (session.getTitle().equals("新对话")) {
             // 使用消息的前15个字符作为标题
@@ -137,21 +146,43 @@ public class ChatService {
         }
     }
 
-    // 获取用户的聊天历史
+    /**
+     * 获取用户的聊天历史（带权限验证）
+     */
     public List<ChatSession> getUserChatHistory(String username) {
         try {
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            if (userOpt.isPresent()) {
-                return chatSessionRepository.findByUserOrderByUpdatedAtDesc(userOpt.get());
-            }
-            return List.of();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("用户不存在: " + username));
+            return chatSessionRepository.findByUserOrderByUpdatedAtDesc(user);
         } catch (Exception e) {
             e.printStackTrace();
             return List.of();
         }
     }
 
-    // 获取具体会话的消息
+    /**
+     * 获取具体会话的消息（带权限验证）
+     */
+    public List<ChatMessage> getSessionMessages(Long sessionId, String username) {
+        try {
+            // 验证会话是否属于当前用户
+            ChatSession session = chatSessionRepository.findById(sessionId)
+                    .orElseThrow(() -> new RuntimeException("会话不存在"));
+
+            if (!session.getUser().getUsername().equals(username)) {
+                throw new RuntimeException("无权限访问此会话");
+            }
+
+            return chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("获取会话消息失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 重载方法：只用sessionId获取消息（保持向后兼容）
+     */
     public List<ChatMessage> getSessionMessages(Long sessionId) {
         try {
             return chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
@@ -161,16 +192,15 @@ public class ChatService {
         }
     }
 
-    // 删除会话
+    /**
+     * 删除会话（带权限验证）
+     */
     @Transactional
     public void deleteSession(Long sessionId, String username) {
         try {
-            Optional<ChatSession> sessionOpt = chatSessionRepository.findById(sessionId);
-            if (sessionOpt.isEmpty()) {
-                throw new RuntimeException("会话不存在");
-            }
+            ChatSession session = chatSessionRepository.findById(sessionId)
+                    .orElseThrow(() -> new RuntimeException("会话不存在"));
 
-            ChatSession session = sessionOpt.get();
             if (!session.getUser().getUsername().equals(username)) {
                 throw new RuntimeException("无权限删除此会话");
             }
@@ -182,12 +212,33 @@ public class ChatService {
         }
     }
 
-    // 获取Ollama服务状态
+    /**
+     * 创建新会话
+     */
+    @Transactional
+    public ChatSession createNewSession(String username, String title) {
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("用户不存在: " + username));
+
+            ChatSession newSession = new ChatSession(title, user);
+            return chatSessionRepository.save(newSession);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("创建会话失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取Ollama服务状态
+     */
     public String getOllamaStatus() {
         return ollamaService.getServiceStatus();
     }
 
-    // 获取当前使用的AI模型
+    /**
+     * 获取当前使用的AI模型
+     */
     public String getCurrentModel() {
         return ollamaService.getCurrentModel();
     }

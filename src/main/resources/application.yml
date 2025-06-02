@@ -5,7 +5,7 @@ spring:
   application:
     name: ai-chatbot-project
 
-  # 切换到MySQL数据库
+  # MySQL数据库配置
   datasource:
     url: jdbc:mysql://localhost:3306/ai_chatbot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -27,11 +27,24 @@ spring:
     console:
       enabled: false
 
+  # 静态资源配置
+  web:
+    resources:
+      static-locations: classpath:/static/
+
 # Ollama配置
 ollama:
   base-url: http://localhost:11434
   model: deepseek-r1:1.5b
 
+# JWT配置 (新增)
+jwt:
+  secret: mySecretKeyForJwtTokenGeneration123456789abcdefghijklmnopqrstuvwxyz
+  expiration: 86400000  # 24小时，单位毫秒
+
+# 日志配置
 logging:
   level:
     org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG
+    com.example.aichatbotproject: DEBUG

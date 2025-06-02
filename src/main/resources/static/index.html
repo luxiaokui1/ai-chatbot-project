@@ -1,53 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>AI聊天机器人测试</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI聊天机器人</title>
+
+    <!-- CSS文件 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/chat.css">
 </head>
 <body>
-<h1>🤖 AI聊天机器人</h1>
-<p>如果你能看到这个页面，说明静态文件配置成功了！</p>
+<!-- 登录页面 -->
+<div id="loginPage" class="auth-container">
+    <div class="auth-header">
+        <h1>🤖 AI聊天机器人</h1>
+        <p>请登录以开始对话</p>
+    </div>
 
-<div id="messages" style="border:1px solid #ccc; height:300px; padding:10px; overflow-y:auto;">
-    <p><strong>系统:</strong> 欢迎使用AI聊天机器人！</p>
+    <form id="loginForm">
+        <div id="loginAlert" class="alert alert-error hidden"></div>
+
+        <div class="form-group">
+            <label for="loginUsername">用户名</label>
+            <input type="text" id="loginUsername" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="loginPassword">密码</label>
+            <input type="password" id="loginPassword" name="password" required>
+        </div>
+
+        <button type="submit" class="btn" id="loginBtn">
+            <span id="loginBtnText">登录</span>
+            <span id="loginLoading" class="loading hidden"></span>
+        </button>
+    </form>
+
+    <div class="auth-switch">
+        <p>还没有账户？ <a href="#" onclick="showRegister()">立即注册</a></p>
+    </div>
 </div>
 
-<br>
-<input type="text" id="messageInput" placeholder="输入消息..." style="width:70%;">
-<button onclick="sendMessage()" style="width:25%;">发送</button>
+<!-- 注册页面 -->
+<div id="registerPage" class="auth-container hidden">
+    <div class="auth-header">
+        <h1>🤖 AI聊天机器人</h1>
+        <p>创建您的账户</p>
+    </div>
 
-<script>
-    function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const messages = document.getElementById('messages');
-        const message = input.value.trim();
+    <form id="registerForm">
+        <div id="registerAlert" class="alert alert-error hidden"></div>
 
-        if (!message) return;
+        <div class="form-group">
+            <label for="registerUsername">用户名</label>
+            <input type="text" id="registerUsername" name="username" required minlength="3" maxlength="20">
+        </div>
 
-        messages.innerHTML += '<p><strong>你:</strong> ' + message + '</p>';
-        messages.innerHTML += '<p><strong>AI:</strong> 正在连接后端...</p>';
-        input.value = '';
-        messages.scrollTop = messages.scrollHeight;
+        <div class="form-group">
+            <label for="registerEmail">邮箱</label>
+            <input type="email" id="registerEmail" name="email" required>
+        </div>
 
-        fetch('/api/chat', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({message: message})
-        })
-            .then(response => response.json())
-            .then(data => {
-                const lastP = messages.lastElementChild;
-                if (data.success) {
-                    lastP.innerHTML = '<strong>AI:</strong> ' + data.response;
-                } else {
-                    lastP.innerHTML = '<strong>AI:</strong> 错误: ' + data.error;
-                }
-            })
-            .catch(error => {
-                const lastP = messages.lastElementChild;
-                lastP.innerHTML = '<strong>AI:</strong> 连接失败: ' + error;
-            });
-    }
-</script>
+        <div class="form-group">
+            <label for="registerPassword">密码</label>
+            <input type="password" id="registerPassword" name="password" required minlength="6">
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">确认密码</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required>
+        </div>
+
+        <button type="submit" class="btn" id="registerBtn">
+            <span id="registerBtnText">注册</span>
+            <span id="registerLoading" class="loading hidden"></span>
+        </button>
+    </form>
+
+    <div class="auth-switch">
+        <p>已有账户？ <a href="#" onclick="showLogin()">立即登录</a></p>
+    </div>
+</div>
+
+<!-- 聊天页面 -->
+<div id="chatPage" class="chat-container hidden">
+    <div class="chat-header">
+        <h1>🤖 AI聊天机器人</h1>
+        <div>
+            <span id="currentUser"></span>
+            <button onclick="logout()" class="logout-btn">退出</button>
+        </div>
+    </div>
+
+    <div id="chatMessages" class="chat-messages">
+        <div class="message ai">
+            <strong>AI助手:</strong> 您好，我是AI助手，有什么可以帮助您的吗？
+        </div>
+    </div>
+
+    <div class="chat-input-container">
+        <input type="text" id="chatInput" class="chat-input" placeholder="输入您的消息..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()" class="chat-send-btn" id="sendBtn">发送</button>
+    </div>
+</div>
+
+<!-- JavaScript文件 -->
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

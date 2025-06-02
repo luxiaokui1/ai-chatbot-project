@@ -1,0 +1,96 @@
+/* 聊天页面专用样式 */
+.chat-container {
+    max-width: 800px;
+    margin: 0 auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.message {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    border-radius: 10px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.message.user {
+    background: #667eea;
+    color: white;
+    margin-left: auto;
+}
+
+.message.ai {
+    background: white;
+    border: 1px solid #e1e5e9;
+}
+
+.chat-input-container {
+    padding: 1rem;
+    border-top: 1px solid #e1e5e9;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 25px;
+    font-size: 1rem;
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.chat-send-btn {
+    padding: 0.8rem 1.5rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.chat-send-btn:hover {
+    background: #5a67d8;
+}
+
+.chat-send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.logout-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
